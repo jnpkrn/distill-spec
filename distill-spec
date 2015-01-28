@@ -18,6 +18,9 @@ from tempfile import NamedTemporaryFile
 from rpm import RPMSPEC_ANYARCH, RPMSPEC_FORCE, RPMBUILD_NONE, _rpmb, addMacro
 
 
+PREFIX = "distill-spec-prefix:"
+
+
 # ctypes magic
 
 rpmb = cdll[_rpmb.__file__]
@@ -53,72 +56,74 @@ re_noexpand_fragile = re_compile("""(?<!%)
                                         (?=\W)
                                       (?(1)}})""".format('|'.join(fragile)),
                                  re_X)
-re_noexpand = re_compile("""(?<!%)
-                              %({{)?
-                                (?!
-                                  (?:!?\?)?
-                                    (?:
-                                      clufter\w*
+re_noexpand = lambda e: re_compile("""(?<!%)
+                                        %({{)?
+                                          (?!
+                                            (?:!?\?)?
+                                              (?:
+                                                clufter\w*
 
-                                      #see rpm/rpmio/macro.c
+                                                #see rpm/rpmio/macro.c
 
-                                      |load|global|define|undefine
-                                      |echo|warn|error
-                                      |trace|dump|lua
+                                                |load|global|define|undefine
+                                                |echo|warn|error
+                                                |trace|dump|lua
 
-                                      |basename|dirname|suffix
-                                      |expand|verbose|uncompress
-                                      |url2path|u2p|getenv|getconfdir
-                                      #|S|P|F
+                                                |basename|dirname|suffix
+                                                |expand|verbose|uncompress
+                                                |url2path|u2p|getenv|getconfdir
+                                                #|S|P|F
 
-                                      |SOURCE|PATCH
+                                                |SOURCE|PATCH
 
-                                      |bcond_with(?:out)?|with[ ]
-
-
-                                      # see rpm/build/parseSpec.c
-
-                                      |if|else|endif
-
-                                      |package|description|files
-                                      |changelog
-
-                                      |prep|build|install|check|clean
-
-                                      |pre(?:un|trans)?
-                                      |post(?:un|trans)?
-                                      |trigger(?:postun|prein|un|in)?
-
-                                      |verifyscript|sepolicy
+                                                |bcond_with(?:out)?|with[ ]
 
 
-                                      # see rpm/build/parsePrep.c
+                                                # see rpm/build/parseSpec.c
 
-                                      |prep
-                                      |setup
+                                                |if|else|endif
+
+                                                |package|description|files
+                                                |changelog
+
+                                                |prep|build|install|check|clean
+
+                                                |pre(?:un|trans)?
+                                                |post(?:un|trans)?
+                                                |trigger(?:postun|prein|un|in)?
+
+                                                |verifyscript|sepolicy
 
 
-                                      # see rpm/build/files.c
+                                                # see rpm/build/parsePrep.c
 
-                                      |attr|defattr
-                                      |dev
+                                                |prep
+                                                |setup
 
-                                      |dir|docdir
-                                      |doc|license|readme
-                                      |pubkey
-                                      |ghost
 
-                                      |caps
-                                      |config
-                                      |lang
+                                                # see rpm/build/files.c
 
-                                      |exclude
-                                      |verify|defverify
+                                                |attr|defattr
+                                                |dev
 
-                                    )
-                                  \W)
-                                  (?P<g>(?:!?\?)?(?P<m>[^:%{{(\s}}]+))
-                              (?(1)}})""",
+                                                |dir|docdir
+                                                |doc|license|readme
+                                                |pubkey
+                                                |ghost
+
+                                                |caps
+                                                |config
+                                                |lang
+
+                                                |exclude
+                                                |verify|defverify
+
+                                              )
+                                            \W)
+                                            (?P<g>(?:!?\?)?(?P<m>[^:%{{(\s}}]+))
+                                        (?(1)}})""".format('|'.join(
+                                            (i + '\w+') for i in e
+                                        )),
                          re_X)
 re_nonexpmacro_wrapped = re_compile("(?P<m>\S*?)".join(nm_parens_re))
 re_multiline = re_compile('\n\n+')
@@ -134,11 +139,22 @@ def get_parsed(f):
 #    addMacro(name, spec)
 
 
-def redef_macros(f):
+def redef_macros(f, expand=(), skip_prefix=False):
     s = None
     with open(f, 'r') as fo:
         s = fo.read()
-    s = re_noexpand.sub(
+    if not skip_prefix:
+        expand, startpos = list(expand), 0
+        while True:
+            newpos = s.find(PREFIX, startpos)
+            if newpos == -1:
+                break
+            newpos += len(PREFIX)
+            startpos = s.find("\n", )
+            if startpos == -1:
+                break
+            expand.append(s[newpos:startpos].strip())
+    s = re_noexpand(expand).sub(
             lambda m: addMacro(m.group('m'), b64encode(m.group(0))
                                .replace('=', '+').join(nm_parens))
                       or m.group(0),
