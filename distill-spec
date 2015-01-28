@@ -44,9 +44,13 @@ nm_parens_re = ((re_escape(neutral_mark), ) * 2)
 fragile = 'name', 'version', 'release'
 fragile_upper = tuple(f.upper() for f in fragile)
 
-re_noexpand_fragile = re_compile("""%({{)?(?P<g>\??(?P<m>(?:{0}
-                                         )))(?=\W)(?(1)}})""".format('|'.join
-                                                                     (fragile)),
+re_noexpand_fragile = re_compile("""(?<!%)
+                                      %({{)?
+                                        (?P<g>(?:!?\?)?
+                                          (?P<m>(?:{0}))
+                                        )
+                                        (?=\W)
+                                      (?(1)}})""".format('|'.join(fragile)),
                                  re_X)
 re_noexpand = re_compile("""%({)?(?!\??(?:clufter\w*
                                          |if|else|endif
