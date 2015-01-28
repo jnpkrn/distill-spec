@@ -224,7 +224,7 @@ if __name__ == "__main__":
         #    question mark, etc.) so that it will be replaced like this
         #    in the specfile preprocessing phase (XXX why not to replace it
         #    right away then?)
-        #s = open(redef_macros(f.name), expand, skip_prefix).read()
+        #s = open(redef_macros(f.name, expand, skip_prefix)).read()
         # second, preprocess the specfile (with new macros)
         #s = get_parsed(redef_macros(f.name, expand, skip_prefix))
         # third, restore those now base64-encoded macros
