@@ -6,11 +6,12 @@
 # Script to distill plain specfile from meta (but still usable!) specfile.
 #
 # TODO:
-# - allow external macro definitions, just like: rpm{,build} --define 'name def'
+# - skip-prefix -> semi-preprocessed, e.g., keeping if-else-endif, etc.
 
 from base64 import (urlsafe_b64encode as b64encode,
                     urlsafe_b64decode as b64decode)
 from ctypes import cdll, c_char_p, c_int, c_void_p
+from getopt import GetoptError, getopt
 from re import compile as re_compile, escape as re_escape, X as re_X
 from sys import argv, stdin
 from tempfile import NamedTemporaryFile
@@ -190,7 +191,20 @@ def squeeze_newlines(s):
 
 
 if __name__ == "__main__":
-    f = stdin if len(argv) < 2 else argv[1]
+    opts, args, expand, skip_prefix = [], [], [], False
+    try:
+        opts, args = getopt(argv[1:], "d:e:s",
+                            ("define=", "expand=", "skip-prefix"))
+    except GetoptError:
+         pass
+    for o, a in opts:
+        if o in ("-d", "--define"):
+            addMacro(*tuple(i.strip() for i in a.split(' ', 1)))
+        elif o in ("-e", "--expand"):
+            expand.append(a)
+        elif o in ("-s", "--skip-prefix"):
+            skip_prefix = True
+    f = args[0] if args else stdin
     if f is not stdin:
         f = open(f, 'r')
     s = f.read()
@@ -210,11 +224,18 @@ if __name__ == "__main__":
         #    question mark, etc.) so that it will be replaced like this
         #    in the specfile preprocessing phase (XXX why not to replace it
         #    right away then?)
-        #s = open(redef_macros(f.name)).read()
+        #s = open(redef_macros(f.name), expand, skip_prefix).read()
         # second, preprocess the specfile (with new macros)
-        #s = get_parsed(redef_macros(f.name))
+        #s = get_parsed(redef_macros(f.name, expand, skip_prefix))
         # third, restore those now base64-encoded macros
-        #s = restore_macros(get_parsed(redef_macros(f.name)))
+        #s = restore_macros(get_parsed(redef_macros(f.name, expand,
+        #                                           skip_prefix)))
         # fourth, smart-squeeze the newlines (2+ x \n --> 2 x \n, ...)
-        s = squeeze_newlines(restore_macros(get_parsed(redef_macros(f.name))))
+        s = squeeze_newlines(
+            restore_macros(
+                get_parsed(
+                    redef_macros(f.name, expand, skip_prefix)
+                )
+            )
+        )
     print s
