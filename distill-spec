@@ -40,7 +40,8 @@ neutral_mark = "_._"
 nm_parens = ((neutral_mark, ) * 2)
 nm_parens_re = ((re_escape(neutral_mark), ) * 2)
 
-fragile = '_isa', 'name', 'version', 'release'
+# see rpm/lib/relocation.c
+fragile = 'name', 'version', 'release'
 fragile_upper = tuple(f.upper() for f in fragile)
 
 re_noexpand_fragile = re_compile("""%({{)?(?P<g>\??(?P<m>(?:{0}
