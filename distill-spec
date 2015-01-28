@@ -52,17 +52,72 @@ re_noexpand_fragile = re_compile("""(?<!%)
                                         (?=\W)
                                       (?(1)}})""".format('|'.join(fragile)),
                                  re_X)
-re_noexpand = re_compile("""%({)?(?!\??(?:clufter\w*
-                                         |if|else|endif
-                                         |global|define
-                                         |package|description
-                                         |prep|build|install|check
-                                         |files|defattr|attr|doc|license|exclude
-                                         |pre|post|preun|postun
-                                         |changelog
-                                    )\W)
-                                 (?P<g>\??(?P<m>[^{(\s}]*))
-                            (?(1)})""",
+re_noexpand = re_compile("""(?<!%)
+                              %({{)?
+                                (?!
+                                  (?:!?\?)?
+                                    (?:
+                                      clufter\w*
+
+                                      #see rpm/rpmio/macro.c
+
+                                      |load|global|define|undefine
+                                      |echo|warn|error
+                                      |trace|dump|lua
+
+                                      |basename|dirname|suffix
+                                      |expand|verbose|uncompress
+                                      |url2path|u2p|getenv|getconfdir
+                                      #|S|P|F
+
+                                      |SOURCE|PATCH
+
+                                      |bcond_with(?:out)?|with[ ]
+
+
+                                      # see rpm/build/parseSpec.c
+
+                                      |if|else|endif
+
+                                      |package|description|files
+                                      |changelog
+
+                                      |prep|build|install|check|clean
+
+                                      |pre(?:un|trans)?
+                                      |post(?:un|trans)?
+                                      |trigger(?:postun|prein|un|in)?
+
+                                      |verifyscript|sepolicy
+
+
+                                      # see rpm/build/parsePrep.c
+
+                                      |prep
+                                      |setup
+
+
+                                      # see rpm/build/files.c
+
+                                      |attr|defattr
+                                      |dev
+
+                                      |dir|docdir
+                                      |doc|license|readme
+                                      |pubkey
+                                      |ghost
+
+                                      |caps
+                                      |config
+                                      |lang
+
+                                      |exclude
+                                      |verify|defverify
+
+                                    )
+                                  \W)
+                                  (?P<g>(?:!?\?)?(?P<m>[^:%{{(\s}}]+))
+                              (?(1)}})""",
                          re_X)
 re_nonexpmacro_wrapped = re_compile("(?P<m>\S*?)".join(nm_parens_re))
 re_multiline = re_compile('\n\n+')
