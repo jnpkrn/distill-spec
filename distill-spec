@@ -8,7 +8,8 @@
 # TODO:
 # - allow external macro definitions, just like: rpm{,build} --define 'name def'
 
-from base64 import b64encode, b64decode
+from base64 import (urlsafe_b64encode as b64encode,
+                    urlsafe_b64decode as b64decode)
 from ctypes import cdll, c_char_p, c_int, c_void_p
 from re import compile as re_compile, escape as re_escape, X as re_X
 from sys import argv, stdin
@@ -129,7 +130,7 @@ def get_parsed(f):
     return s
 
 #def add_macro(name, spec):
-#    print "adding:", name, spec
+#    print "adding:", name, '=', spec, restore_macros(spec).join(('(', ')'))
 #    addMacro(name, spec)
 
 
@@ -138,9 +139,12 @@ def redef_macros(f):
     with open(f, 'r') as fo:
         s = fo.read()
     s = re_noexpand.sub(
-            lambda m: addMacro(m.group('m'), b64encode(m.group('g'))
-                      .replace('=', '_').join(nm_parens)) or m.group(0),
-            re_noexpand_fragile.sub(lambda m: m.group(0).upper(), s)
+            lambda m: addMacro(m.group('m'), b64encode(m.group(0))
+                               .replace('=', '+').join(nm_parens))
+                      or m.group(0),
+            re_noexpand_fragile.sub(lambda m: m.group(0).upper(),
+                                    s#.replace("%%{", "%%%%{")
+                                    )
     )
     with open(f, 'w') as fo:
         fo.write(s)
@@ -148,12 +152,12 @@ def redef_macros(f):
 
 
 def restore_macros(s):
-    return re_nonexpmacro_wrapped.sub(lambda m: "%{{{0}}}".format(
+    return re_nonexpmacro_wrapped.sub(lambda m: "{0}".format(
                                           tuple(
                                               n.lower() if any(f in n for f
                                                                in fragile_upper)
                                               else n for n in (b64decode(
-                                                  m.group('m').replace('_', '=')
+                                                  m.group('m').replace('+', '=')
                                               ), )
                                           )[0]),
                                       s)
