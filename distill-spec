@@ -11,7 +11,7 @@
 from base64 import (urlsafe_b64encode as b64encode,
                     urlsafe_b64decode as b64decode)
 from ctypes import cdll, c_char_p, c_int, c_void_p
-from getopt import GetoptError, getopt
+from getopt import GetoptError, gnu_getopt
 from re import compile as re_compile, escape as re_escape, X as re_X
 from sys import argv, stderr, stdin
 from tempfile import NamedTemporaryFile
@@ -195,8 +195,8 @@ def squeeze_newlines(s):
 if __name__ == "__main__":
     opts, args, expand, skip_prefix = [], [], [], False
     try:
-        opts, args = gnu_opt(argv[1:], "D:de:s",
-                             ("define=", "debug", "expand=", "skip-prefix"))
+        opts, args = gnu_getopt(argv[1:], "D:de:s",
+                                ("define=", "debug", "expand=", "skip-prefix"))
     except GetoptError:
          pass
     for o, a in opts:
