@@ -1,0 +1,7 @@
+distill-spec
+============
+
+Purpose: Guided spec file preprocessing.
+
+This script is used in the maintenance of clufter so derive a simple
+spec file from a more convoluted ("meta") one for downstream use.
