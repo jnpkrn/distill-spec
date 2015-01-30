@@ -196,7 +196,8 @@ if __name__ == "__main__":
     opts, args, expand, skip_prefix = [], [], [], False
     try:
         opts, args = gnu_getopt(argv[1:], "D:de:s",
-                                ("define=", "debug", "expand=", "skip-prefix"))
+                                ("define=", "debug", "expand=", "skip-prefix",
+                                 "with=", "without="))
     except GetoptError:
          pass
     for o, a in opts:
@@ -208,6 +209,9 @@ if __name__ == "__main__":
             expand.append(a)
         elif o in ("-s", "--skip-prefix"):
             skip_prefix = True
+        elif o in("--with", "--without"):
+            fmt = (o.lstrip('-'), a.strip())
+            opts.append(("--define", "_{0}_{1} --{0}-{1}".format(*fmt)))
     f = args[0] if args else stdin
     if f is not stdin:
         f = open(f, 'r')
