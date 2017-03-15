@@ -13,6 +13,7 @@ from __future__ import print_function
 from base64 import (urlsafe_b64encode as b64encode,
                     urlsafe_b64decode as b64decode)
 from ctypes import cdll, c_char_p, c_int, c_void_p
+from functools import reduce
 from getopt import GetoptError, gnu_getopt
 from re import compile as re_compile, escape as re_escape, X as re_X
 from sys import argv, stderr, stdin
