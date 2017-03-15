@@ -79,6 +79,11 @@ re_noexpand = lambda e: re_compile("""(?<!%)
 
                                                 {0}
 
+                                                |\d+
+                                                |\*{{1,2}}
+                                                |\#
+                                                |-\w+\*?
+
                                                 #see rpm/rpmio/macro.c
 
                                                 |load|global|define|undefine
