@@ -76,7 +76,8 @@ re_noexpand = lambda e: re_compile("""(?<!%)
                                           (?!
                                             (?:!?\?)?
                                               (?:
-                                                clufter\w*
+
+                                                {0}
 
                                                 #see rpm/rpmio/macro.c
 
@@ -137,7 +138,7 @@ re_noexpand = lambda e: re_compile("""(?<!%)
                                             \W)
                                             (?P<g>(?:!?\?)?(?P<m>[^:%{{(\s}}]+))
                                         (?(1)}})""".format('|'.join(
-                                            (i + '\w+') for i in e
+                                            (i + '\w*') for i in e
                                         )),
                          re_X)
 re_nonexpmacro_wrapped = re_compile("(?P<m>\S*?)".join(nm_parens_re))
