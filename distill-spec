@@ -59,18 +59,6 @@ neutral_mark = "_._"
 nm_parens = ((neutral_mark, ) * 2)
 nm_parens_re = ((re_escape(neutral_mark), ) * 2)
 
-# see rpm/lib/relocation.c
-fragile = 'name', 'version', 'release'
-fragile_upper = tuple(f.upper() for f in fragile)
-
-re_noexpand_fragile = re_compile("""(?<!%)
-                                      %({{)?
-                                        (?P<g>(?:!?\?)?
-                                          (?P<m>(?:{0}))
-                                        )
-                                        (?=\W)
-                                      (?(1)}})""".format('|'.join(fragile)),
-                                 re_X)
 re_noexpand = lambda e: re_compile("""(?<!%)
                                         %({{)?
                                           (?!
@@ -177,13 +165,14 @@ def redef_macros(f, expand=(), skip_prefix=False):
                 break
             expand.append(s[newpos:startpos].strip())
     s = re_noexpand(expand).sub(
-            lambda m: do_add_macro(m.group('m'), str_enc(b64encode(bytes_enc(
-                                   m.group(0)))).replace('=', '+')
-                                                .join(nm_parens))
-                      or m.group(0),
-            re_noexpand_fragile.sub(lambda m: m.group(0).upper(),
-                                    s#.replace("%%{", "%%%%{")
-                                    )
+            lambda m:
+                do_add_macro(m.group('m').upper(), str_enc(b64encode(bytes_enc(
+                                                       m.group(0))))
+                                                       .replace('=', '+')
+                                                       .join(nm_parens)
+                ) or m.group(0).upper(),
+            s#.replace("%%{", "%%%%{")
+         )
     )
     with open(f, 'w') as fo:
         fo.write(s)
@@ -193,9 +182,7 @@ def redef_macros(f, expand=(), skip_prefix=False):
 def restore_macros(s):
     return re_nonexpmacro_wrapped.sub(lambda m: "{0}".format(
                                           tuple(
-                                              n.lower() if any(f in n for f
-                                                               in fragile_upper)
-                                              else n for n in (str_enc(b64decode(
+                                              n for n in (str_enc(b64decode(
                                                   bytes_enc(m.group('m').replace('+', '='))
                                               ), 'utf-8'), )
                                           )[0]),
