@@ -21,6 +21,16 @@ from tempfile import NamedTemporaryFile
 
 from rpm import RPMSPEC_ANYARCH, RPMSPEC_FORCE, RPMBUILD_NONE, _rpmb, addMacro
 
+# Python 3 compatibility
+from sys import version_info
+if version_info[0] >= 3:
+    bytes_enc = (lambda s, encoding='ascii':
+                    bytes(s, encoding) if not isinstance(s, bytes) else s)
+    str_enc = lambda s, encoding='ascii': str(s, encoding)
+else:
+    bytes_enc = lambda s, *args: bytes(s)
+    str_enc = lambda s, *args: str(s)
+
 
 PREFIX = "distill-spec-prefix:"
 do_add_macro = addMacro
@@ -135,8 +145,8 @@ re_multiline = re_compile('\n\n+')
 
 
 def get_parsed(f):
-    spec = rpmSpecParse(f, RPMSPEC_ANYARCH | RPMSPEC_FORCE, 0)
-    s = rpmSpecGetSection(spec, RPMBUILD_NONE)
+    spec = rpmSpecParse(bytes_enc(f), RPMSPEC_ANYARCH | RPMSPEC_FORCE, 0)
+    s = str_enc(rpmSpecGetSection(spec, RPMBUILD_NONE), 'utf-8')
     return s
 
 def add_macro(name, spec):
@@ -161,8 +171,9 @@ def redef_macros(f, expand=(), skip_prefix=False):
                 break
             expand.append(s[newpos:startpos].strip())
     s = re_noexpand(expand).sub(
-            lambda m: do_add_macro(m.group('m'), b64encode(m.group(0))
-                                   .replace('=', '+').join(nm_parens))
+            lambda m: do_add_macro(m.group('m'), str_enc(b64encode(bytes_enc(
+                                   m.group(0)))).replace('=', '+')
+                                                .join(nm_parens))
                       or m.group(0),
             re_noexpand_fragile.sub(lambda m: m.group(0).upper(),
                                     s#.replace("%%{", "%%%%{")
@@ -178,9 +189,9 @@ def restore_macros(s):
                                           tuple(
                                               n.lower() if any(f in n for f
                                                                in fragile_upper)
-                                              else n for n in (b64decode(
-                                                  m.group('m').replace('+', '=')
-                                              ), )
+                                              else n for n in (str_enc(b64decode(
+                                                  bytes_enc(m.group('m').replace('+', '='))
+                                              ), 'utf-8'), )
                                           )[0]),
                                       s)
 
