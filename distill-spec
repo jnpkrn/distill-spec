@@ -153,6 +153,15 @@ def add_macro(name, spec):
     addMacro(name, spec)
 
 
+def _record(re):
+    do_add_macro(
+        re.group('m').upper(),
+        str_enc(b64encode(bytes_enc(re.group(0)))).replace('=', '+')
+                                                  .join(nm_parens)
+    )
+    return re.group(0).upper()
+
+
 def redef_macros(f, expand=(), skip_prefix=False):
     s = None
     with open(f, 'r') as fo:
@@ -170,14 +179,7 @@ def redef_macros(f, expand=(), skip_prefix=False):
             expand.extend((i.strip() for i in s[newpos:startpos].split(',')))
         s = s[startpos + 1:]
     s = re_noexpand(expand).sub(
-            lambda m:
-                do_add_macro(m.group('m').upper(), str_enc(b64encode(bytes_enc(
-                                                       m.group(0))))
-                                                       .replace('=', '+')
-                                                       .join(nm_parens)
-                ) or m.group(0).upper(),
-            s#.replace("%%{", "%%%%{")
-         )
+        lambda m: _record(m), s#.replace("%%{", "%%%%{")
     )
     with open(f, 'w') as fo:
         fo.write(s)
