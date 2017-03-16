@@ -9,6 +9,31 @@ from __future__ import print_function
 #
 # TODO:
 # - skip-prefix -> semi-preprocessed, e.g., keeping if-else-endif, etc.
+#
+# Convert snippets like this:
+#     %if 0%{?rhel} < 7
+#     %bcond_with generated_schemas
+#     %else
+#     %bcond_without generated_schemas
+#     %endif
+# into this:
+#     %{echo:
+#     SOMEHASH
+#     %if 0%%{?rhel} < 7
+#     %%bcond_with generated_schemas
+#     %else
+#     %%bcond_without generated_schemas
+#     %endif
+#     }
+# which will subsequently with rpmSpecParse call get converted into this
+# on stderr:
+#     SOMEHASH
+#     %if 0%{?rhel} < 7
+#     %bcond_with generated_schemas
+#     %else
+#     %bcond_without generated_schemas
+#     %endif
+# which can then be merged, using SOMEHASH as a guide, into the main output.
 
 from base64 import (urlsafe_b64encode as b64encode,
                     urlsafe_b64decode as b64decode)
