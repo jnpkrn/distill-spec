@@ -162,10 +162,7 @@ def _record(re):
     return re.group(0).upper()
 
 
-def redef_macros(f, expand=(), skip_prefix=False):
-    s = None
-    with open(f, 'r') as fo:
-        s = fo.read()
+def redef_macros(f, s, expand=(), skip_prefix=False):
     if not skip_prefix:
         expand, startpos = list(expand), 0
         while True:
@@ -181,8 +178,9 @@ def redef_macros(f, expand=(), skip_prefix=False):
     s = re_noexpand(expand).sub(
         lambda m: _record(m), s#.replace("%%{", "%%%%{")
     )
-    with open(f, 'w') as fo:
-        fo.write(s)
+
+    f.write(s)
+    f.flush()
     return f
 
 
@@ -233,9 +231,6 @@ if __name__ == "__main__":
     if f is not stdin:
         f.close()
     with NamedTemporaryFile('w') as f:
-        f.write(s)
-        f.flush()
-        f.seek(0)
         # first redefine macros in following way:
         # 1. replace name, version, ... with upper-cased version, because
         #    the are the automatic macros that's get (re)defined when parsing
@@ -256,7 +251,7 @@ if __name__ == "__main__":
         s = squeeze_newlines(
             restore_macros(
                 get_parsed(
-                    redef_macros(f.name, expand, skip_prefix)
+                    redef_macros(f, s, expand, skip_prefix).name
                 )
             )
         )
