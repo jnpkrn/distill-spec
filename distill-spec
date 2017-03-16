@@ -130,7 +130,11 @@ re_noexpand = lambda e: re_compile("""(?<!%)
                                               )
                                             \W)
                                             (?P<g>(?:!?\?)?(?P<m>[^:%{{(\s}}]+))
-                                        (?(1)}})""".format('|'.join(
+                                            (?(1)}}|(?!.*%)  # do not continue
+                                                             # if unbraced macro
+                                                             # followed by
+                                                             # another macro
+                                            )""".format('|'.join(
                                             (i + '\w*') for i in e
                                         )),
                          re_X)
