@@ -164,10 +164,11 @@ def redef_macros(f, expand=(), skip_prefix=False):
             if newpos == -1:
                 break
             newpos += len(PREFIX)
-            startpos = s.find("\n", )
+            startpos = s.find("\n", newpos)
             if startpos == -1:
                 break
-            expand.append(s[newpos:startpos].strip())
+            expand.extend((i.strip() for i in s[newpos:startpos].split(',')))
+        s = s[startpos + 1:]
     s = re_noexpand(expand).sub(
             lambda m:
                 do_add_macro(m.group('m').upper(), str_enc(b64encode(bytes_enc(
@@ -217,7 +218,7 @@ if __name__ == "__main__":
         elif o == "-d":
             do_add_macro = add_macro
         elif o in ("-e", "--expand"):
-            expand.append(a)
+            expand.extend((i.strip() for i in a.split(',')))
         elif o in ("-s", "--skip-prefix"):
             skip_prefix = True
         elif o in("--with", "--without"):
