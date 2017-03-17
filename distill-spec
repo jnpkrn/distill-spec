@@ -113,7 +113,7 @@ re_noexpand = lambda e: re_compile("""(?<!%)
                                                 |url2path|u2p|getenv|getconfdir
                                                 #|S|P|F
 
-                                                |SOURCE|PATCH
+                                                #|SOURCE\d*|PATCH\d*
 
                                                 |bcond_with(?:out)?|with[ ]
 
