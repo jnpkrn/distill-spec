@@ -58,6 +58,11 @@ else:
 
 
 PREFIX = "distill-spec-prefix:"
+NS     = "distill_"
+
+# we need to be careful about where we insert the prefix (inner identifier)
+transform = lambda x: ''.join((NS + s if i == 1 else s for i, s
+                               in enumerate(x.partition(x.lstrip('%{!?')[0]))))
 do_add_macro = addMacro
 
 
@@ -180,11 +185,11 @@ def add_macro(name, spec):
 
 def _record(re):
     do_add_macro(
-        re.group('m').upper(),
+        transform(re.group('m')),
         str_enc(b64encode(bytes_enc(re.group(0)))).replace('=', '+')
                                                   .join(nm_parens)
     )
-    return re.group(0).upper()
+    return transform(re.group(0))
 
 
 def redef_macros(f, s, expand=(), skip_prefix=False):
